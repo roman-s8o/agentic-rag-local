@@ -11,8 +11,8 @@ dist/
 build/
 *.egg-info/
 
-models/
-data/
+/models/
+/data/
 !data/.gitkeep
 eval/results/*
 !eval/results/.gitkeep
