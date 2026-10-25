@@ -1,0 +1,32 @@
+# Model registry used by `rag models pull-all`.
+# kind: llm | vlm | embedding | reranker | image_embedding
+# mlx_convert: convert to MLX after download (Apple Silicon only)
+
+models:
+  - role: generator
+    kind: vlm
+    repo_id: Qwen/Qwen3-VL-8B-Instruct
+    include: ["*.json", "*.safetensors", "*.txt", "*.jinja", "tokenizer*"]
+    enabled: false
+
+  - role: generator_mlx
+    kind: vlm
+    repo_id: mlx-community/Qwen3-VL-8B-Instruct-4bit
+    enabled: false
+
+  - role: embedding
+    kind: embedding
+    repo_id: BAAI/bge-m3
+    exclude: ["*.onnx", "onnx/*", "*.bin", "imgs/*"]
+
+  - role: reranker
+    kind: reranker
+    repo_id: BAAI/bge-reranker-v2-m3
+
+  - role: image_embedding
+    kind: image_embedding
+    repo_id: vidore/colqwen2.5-v0.2
+
+  - role: image_embedding_base
+    kind: image_embedding
+    repo_id: vidore/colqwen2.5-base

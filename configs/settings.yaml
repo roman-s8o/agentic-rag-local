@@ -1,0 +1,67 @@
+# Runtime configuration. Any value can be overridden with env vars,
+# e.g. RAG_LLM__BACKEND=vllm or RAG_RETRIEVAL__LIMIT=30.
+
+models_dir: models
+
+llm:
+  backend: ollama            # ollama | mlx | vllm | openai
+  model: qwen3-vl:8b         # vllm: Qwen/Qwen3-VL-8B-Instruct, mlx: mlx-community/Qwen3-VL-8B-Instruct-4bit
+  temperature: 0.0
+  max_tokens: 1024
+  structured_output: auto    # auto | json_schema | prompt
+  reasoning_effort: null     # "none" disables thinking on hybrid reasoning models (Qwen3.5, gpt-oss)
+
+embedding:
+  text_backend: bgem3        # bgem3 (dense + sparse in one pass) | sentence_transformers
+  dense_model: BAAI/bge-m3
+  sparse_backend: bgem3      # bgem3 | bm25 (used with sentence_transformers)
+  sparse_model: Qdrant/bm25
+  image_enabled: true
+  image_model: vidore/colqwen2.5-v0.2
+  batch_size: 16
+
+reranker:
+  backend: cross_encoder     # cross_encoder | http | none
+  model: BAAI/bge-reranker-v2-m3
+  top_n: 6
+
+qdrant:
+  url: http://localhost:6333
+  collection: documents
+
+retrieval:
+  prefetch_limit: 30
+  limit: 20
+  rrf_k: 60
+
+ingestion:
+  max_chunk_tokens: 512
+  caption_images: true
+  min_image_px: 96
+  images_dir: data/images
+  uploads_dir: data/uploads
+
+agent:
+  max_retrieval_rounds: 2
+  max_generation_attempts: 2
+  max_sub_queries: 3
+  max_context_images: 3
+  context_chars_per_doc: 1500
+  checkpoint_path: data/checkpoints.sqlite
+
+eval:
+  dataset: eval/datasets/golden.jsonl
+  output_dir: eval/results
+  thresholds:
+    faithfulness: 0.75
+    answer_relevancy: 0.70
+    context_precision: 0.65
+    context_recall: 0.70
+
+observability:
+  langfuse_enabled: true
+  tags: [agentic-rag]
+
+api:
+  host: 127.0.0.1
+  port: 8800

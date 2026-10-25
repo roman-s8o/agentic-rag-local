@@ -1,0 +1,37 @@
+name: RAG evaluation
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"
+
+jobs:
+  ragas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      qdrant:
+        image: qdrant/qdrant:v1.20.0
+        ports: ["6333:6333"]
+    env:
+      RAG_LLM__BACKEND: vllm
+      RAG_LLM__BASE_URL: ${{ secrets.RAG_LLM_BASE_URL }}
+      RAG_LLM__MODEL: ${{ vars.RAG_LLM_MODEL || 'Qwen/Qwen3-VL-8B-Instruct' }}
+      RAG_LLM__API_KEY: ${{ secrets.RAG_LLM_API_KEY }}
+      RAG_EMBEDDING__IMAGE_ENABLED: "false"
+      RAG_INGESTION__CAPTION_IMAGES: "true"
+      RAG_OBSERVABILITY__LANGFUSE_ENABLED: "false"
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --extra ml --extra ingest --extra eval
+      - run: uv run rag ingest eval/corpus --recreate
+      - run: uv run rag eval --output eval/results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ragas-results
+          path: eval/results/
