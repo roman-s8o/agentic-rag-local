@@ -74,6 +74,9 @@ src = ["src", "tests"]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "N", "ASYNC", "PT"]
 ignore = ["E501", "B008"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["agentic_rag"]
+
 [tool.pyright]
 include = ["src", "tests", "eval"]
 pythonVersion = "3.11"

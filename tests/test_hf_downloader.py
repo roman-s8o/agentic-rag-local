@@ -4,7 +4,11 @@ from typing import Any
 
 import pytest
 
-from agentic_rag.models.hf_downloader import HFModelDownloader, ModelAccessError, ModelRegistry
+from agentic_rag.models.hf_downloader import (
+    HFModelDownloader,
+    ModelAccessError,
+    ModelRegistry,
+)
 
 
 class FakeApi:

@@ -20,7 +20,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-      - run: uv sync --group dev --python ${{ matrix.python-version }}
+      - run: uv sync --frozen --group dev --python ${{ matrix.python-version }}
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pyright
@@ -34,7 +34,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-      - run: uv sync --group dev
+      - run: uv sync --frozen --group dev
       - run: uv run pytest -m integration
 
   secrets-scan:
