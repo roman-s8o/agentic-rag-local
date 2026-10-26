@@ -4,8 +4,12 @@ Local multimodal **agentic RAG**: LangGraph orchestration, Qdrant hybrid search,
 cross-encoder reranker, a pluggable OpenAI-compatible LLM layer (Ollama / MLX / vLLM),
 Hugging Face model downloads, Langfuse traces and a RAGAS evaluation gate.
 
-Built as a public portfolio project. Decisions live in [`docs/adr/`](docs/adr/).
-Publishing checklist: [`docs/github-profile.md`](docs/github-profile.md).
+With the default settings the whole stack runs on your own machine: the LLM (Ollama), BGE-M3
+embeddings, the reranker and Qdrant. Models are downloaded from Hugging Face once. Prompts
+leave the machine only if you point the LLM layer at a remote API (for example the `openai`
+backend), and traces go to the Langfuse instance set in `.env` (`make up` starts a local one).
+
+Design decisions live in [`docs/adr/`](docs/adr/).
 
 ## Features
 
@@ -14,7 +18,7 @@ Publishing checklist: [`docs/github-profile.md`](docs/github-profile.md).
 - **Multimodal** — PDF/DOCX/images in, VLM answers over retrieved figures
 - **Any open-source model** — `rag models pull <org/name>` from Hugging Face
 - **Same app on Mac and GPU** — Ollama/MLX locally, `docker compose --profile gpu` for vLLM
-- **Eval gate** — RAGAS metrics fail CI when scores drop below thresholds
+- **Eval gate** — `make eval` runs a golden set through RAGAS and exits 1 if a metric is below its threshold (a manual GitHub workflow, not part of the CI on every push)
 
 ```mermaid
 flowchart LR
@@ -48,7 +52,7 @@ See [docs/architecture.md](docs/architecture.md) for the layer-by-layer write-up
 
 ## Quickstart
 
-You need Python 3.11+, [uv](https://docs.astral.sh/uv/), Docker (Qdrant + Langfuse)
+You need Python 3.11–3.13, [uv](https://docs.astral.sh/uv/), Docker (Qdrant + Langfuse)
 and a local LLM that speaks `/v1/chat/completions` (Ollama is the default).
 
 ```bash
@@ -121,16 +125,18 @@ curl -s localhost:8800/query -H 'content-type: application/json' \
 Golden set: [`eval/datasets/golden.jsonl`](eval/datasets/golden.jsonl) (12 questions over
 the Helios H5 manual, the travel policy and an efficiency chart).
 
-| Metric | Threshold | Last run |
-|---|---|---|
-| faithfulness | 0.75 | run `make eval` |
-| answer_relevancy | 0.70 | run `make eval` |
-| context_precision | 0.65 | run `make eval` |
-| context_recall | 0.70 | run `make eval` |
-| source_recall | — | reported, not gated |
-| multimodal_faithfulness | — | on samples that retrieve images |
+| Metric | Threshold |
+|---|---|
+| faithfulness | 0.75 |
+| answer_relevancy | 0.70 |
+| context_precision | 0.65 |
+| context_recall | 0.70 |
+| source_recall | reported, not gated |
+| multimodal_faithfulness | reported on samples that retrieve images |
 
-Results are written to `eval/results/latest.md` and pushed to Langfuse when it is up.
+No scores are published yet: they depend on the LLM, the embedding models and the hardware.
+`make eval` writes a report with each score next to its threshold to `eval/results/latest.md`
+and pushes it to Langfuse when it is up.
 
 ## Tests
 
@@ -139,6 +145,11 @@ make test                 # unit tests, no Docker, no models
 make test-integration     # Qdrant via testcontainers
 make check                # ruff + pyright + unit tests
 ```
+
+CI runs on every push: ruff, pyright, unit tests on Python 3.11 and 3.12, integration tests
+with Qdrant, and a gitleaks scan of the full history. The RAGAS evaluation
+(`.github/workflows/eval.yml`) is started by hand and needs an LLM endpoint in the
+`RAG_LLM_BASE_URL` secret.
 
 ## Layout
 
