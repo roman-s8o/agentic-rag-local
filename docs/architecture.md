@@ -1,8 +1,8 @@
 # Architecture
 
 The system is a local multimodal agentic RAG stack. Every inference call goes through an
-OpenAI-compatible HTTP API, so the same application code runs on Ollama or MLX (this Mac)
-and on vLLM (NVIDIA GPU).
+OpenAI-compatible HTTP API, so the same application code runs on vLLM (NVIDIA GPU, the
+default) and on Ollama or MLX (Apple Silicon).
 
 ```
 PDF / DOCX / images
@@ -44,11 +44,11 @@ PDF / DOCX / images
   agent, scores with RAGAS (faithfulness, answer relevancy, context precision/recall,
   multimodal faithfulness) and fails if any configured threshold is missed.
 
-## Default models (8-16 GB friendly)
+## Default models
 
 | Role | Model | Notes |
 |---|---|---|
-| Generator | `qwen3-vl:8b` (Ollama) / `Qwen/Qwen3-VL-8B-Instruct` (vLLM) | VLM |
+| Generator | `Qwen/Qwen3-VL-8B-Instruct` (vLLM, default) / `qwen3-vl:8b` (Ollama) | VLM |
 | Embeddings | `BAAI/bge-m3` | dense + sparse |
 | Reranker | `BAAI/bge-reranker-v2-m3` | cross-encoder |
 | Images | `vidore/colqwen2.5-v0.2` | late interaction |

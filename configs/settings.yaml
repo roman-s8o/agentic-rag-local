@@ -4,8 +4,8 @@
 models_dir: models
 
 llm:
-  backend: ollama            # ollama | mlx | vllm | openai
-  model: qwen3-vl:8b         # vllm: Qwen/Qwen3-VL-8B-Instruct, mlx: mlx-community/Qwen3-VL-8B-Instruct-4bit
+  backend: vllm              # vllm (NVIDIA GPU) | ollama | mlx (Mac) | openai
+  model: Qwen/Qwen3-VL-8B-Instruct  # ollama: qwen3-vl:8b, mlx: mlx-community/Qwen3-VL-8B-Instruct-4bit
   temperature: 0.0
   max_tokens: 1024
   structured_output: auto    # auto | json_schema | prompt

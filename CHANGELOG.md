@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Default LLM backend is vLLM with `Qwen/Qwen3-VL-8B-Instruct` (was Ollama); Ollama and MLX remain for Macs ([ADR 0002](docs/adr/0002-provider-abstraction.md))
+- vLLM image pinned to `v0.31.0` (override with `VLLM_IMAGE_TAG`); the `api` container points at the `vllm` service by default
+- README: evaluation status and CI scope described as they are
+
 ## 0.1.0 - 2026-10-25
 
 Initial public release.

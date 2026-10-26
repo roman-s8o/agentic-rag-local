@@ -149,7 +149,7 @@ services:
 
   vllm:
     profiles: [gpu]
-    image: vllm/vllm-openai:latest
+    image: vllm/vllm-openai:${VLLM_IMAGE_TAG:-v0.31.0}
     restart: unless-stopped
     ipc: host
     ports:
@@ -192,7 +192,7 @@ services:
       RAG_QDRANT__URL: http://qdrant:6333
       RAG_API__HOST: 0.0.0.0
       LANGFUSE_BASE_URL: http://langfuse-web:3000
-      RAG_LLM__BASE_URL: ${RAG_LLM__BASE_URL:-http://host.docker.internal:11434/v1}
+      RAG_LLM__BASE_URL: ${RAG_LLM__BASE_URL:-http://vllm:8000/v1}
     volumes:
       - ./models:/app/models
       - ./data:/app/data

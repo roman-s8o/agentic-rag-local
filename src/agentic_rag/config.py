@@ -27,9 +27,9 @@ CONFIG_DIR = Path(os.environ.get("RAG_CONFIG_DIR", "configs"))
 
 
 class LLMSettings(BaseModel):
-    backend: Backend = "ollama"
+    backend: Backend = "vllm"
     base_url: str | None = None
-    model: str = "qwen3-vl:8b"
+    model: str = "Qwen/Qwen3-VL-8B-Instruct"
     api_key: SecretStr = SecretStr("local")
     temperature: float = 0.0
     max_tokens: int = 1024

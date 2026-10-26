@@ -1,13 +1,14 @@
 # agentic-rag-local
 
 Local multimodal **agentic RAG**: LangGraph orchestration, Qdrant hybrid search, a
-cross-encoder reranker, a pluggable OpenAI-compatible LLM layer (Ollama / MLX / vLLM),
-Hugging Face model downloads, Langfuse traces and a RAGAS evaluation gate.
+cross-encoder reranker, a pluggable OpenAI-compatible LLM layer (vLLM by default, Ollama or
+MLX on a Mac), Hugging Face model downloads, Langfuse traces and a RAGAS evaluation gate.
 
-With the default settings the whole stack runs on your own machine: the LLM (Ollama), BGE-M3
-embeddings, the reranker and Qdrant. Models are downloaded from Hugging Face once. Prompts
-leave the machine only if you point the LLM layer at a remote API (for example the `openai`
-backend), and traces go to the Langfuse instance set in `.env` (`make up` starts a local one).
+With the default settings the whole stack runs on your own hardware: the LLM (vLLM on an
+NVIDIA GPU, or Ollama/MLX on a Mac), BGE-M3 embeddings, the reranker and Qdrant. Models are
+downloaded from Hugging Face once. Prompts leave the machine only if you point the LLM layer
+at a remote API (for example the `openai` backend), and traces go to the Langfuse instance
+set in `.env` (`make up` and `make up-gpu` start a local one).
 
 Design decisions live in [`docs/adr/`](docs/adr/).
 
@@ -17,7 +18,7 @@ Design decisions live in [`docs/adr/`](docs/adr/).
 - **Hybrid search** — BGE-M3 dense + sparse, ColQwen image multivectors, RRF fusion in Qdrant
 - **Multimodal** — PDF/DOCX/images in, VLM answers over retrieved figures
 - **Any open-source model** — `rag models pull <org/name>` from Hugging Face
-- **Same app on Mac and GPU** — Ollama/MLX locally, `docker compose --profile gpu` for vLLM
+- **Same app on GPU server and Mac** — vLLM on an NVIDIA GPU by default; Ollama or MLX on a Mac through env vars
 - **Eval gate** — `make eval` runs a golden set through RAGAS and exits 1 if a metric is below its threshold (a manual GitHub workflow, not part of the CI on every push)
 
 ```mermaid
@@ -43,7 +44,7 @@ flowchart LR
         Check -->|hallucination| Generate
     end
     Qdrant --> Retrieve
-    Generate --> LLM["OpenAI-compatible: MLX / Ollama / vLLM"]
+    Generate --> LLM["OpenAI-compatible: vLLM / Ollama / MLX"]
     agent -.-> Langfuse[Langfuse traces]
     Langfuse -.-> Ragas[RAGAS eval]
 ```
@@ -52,14 +53,15 @@ See [docs/architecture.md](docs/architecture.md) for the layer-by-layer write-up
 
 ## Quickstart
 
-You need Python 3.11–3.13, [uv](https://docs.astral.sh/uv/), Docker (Qdrant + Langfuse)
-and a local LLM that speaks `/v1/chat/completions` (Ollama is the default).
+The default backend is vLLM. You need Python 3.11–3.13, [uv](https://docs.astral.sh/uv/),
+Docker with the NVIDIA Container Toolkit, and an NVIDIA GPU that fits Qwen3-VL-8B (the bf16
+weights alone are about 17 GB, so plan for 24 GB of GPU memory or more; an estimate).
 
 ```bash
 cp .env.example .env
 make setup
-make up                 # Qdrant + Langfuse. Skip if the disk is tight: use in-memory Qdrant in tests.
-ollama pull qwen3-vl:8b # or: make serve-llm-mlx
+make up-gpu             # Qdrant, Langfuse and vLLM (v0.31.0); first start downloads Qwen3-VL-8B
+make logs               # wait until vLLM reports that the server is ready
 make models             # BGE-M3, reranker, ColQwen (several GB)
 make ingest             # indexes eval/corpus
 make query Q="What is the peak efficiency of the Helios H5?"
@@ -67,27 +69,25 @@ make ui                 # Gradio chat with image upload
 ```
 
 `make eval` runs the golden set through the agent and RAGAS and exits 1 if any
-threshold in `configs/settings.yaml` is missed.
+threshold in `configs/settings.yaml` is missed. Set `VLLM_IMAGE_TAG` to try another vLLM
+release.
 
-### Mac only (no NVIDIA GPU)
+### Mac (no NVIDIA GPU)
 
-Default backend is Ollama. MLX is the other local option:
+vLLM's Apple Silicon plugin ([vllm-metal](https://docs.vllm.ai/projects/vllm-metal/en/latest/))
+focused on text-only models as of October 2026, and this project needs a vision model. On a
+Mac, start Qdrant and Langfuse with `make up` and serve the model with Ollama or MLX:
 
 ```bash
-make serve-llm-mlx
-# then in .env:
+make serve-llm-ollama   # then in .env:
+# RAG_LLM__BACKEND=ollama
+# RAG_LLM__BASE_URL=http://localhost:11434/v1
+# RAG_LLM__MODEL=qwen3-vl:8b
+
+make serve-llm-mlx      # or MLX, then in .env:
 # RAG_LLM__BACKEND=mlx
 # RAG_LLM__BASE_URL=http://localhost:8080/v1
 # RAG_LLM__MODEL=mlx-community/Qwen3-VL-8B-Instruct-4bit
-```
-
-### NVIDIA GPU
-
-```bash
-make up-gpu             # adds vLLM
-# RAG_LLM__BACKEND=vllm
-# RAG_LLM__BASE_URL=http://localhost:8000/v1
-# RAG_LLM__MODEL=Qwen/Qwen3-VL-8B-Instruct
 ```
 
 Application code does not change. That is [ADR 0002](docs/adr/0002-provider-abstraction.md).
