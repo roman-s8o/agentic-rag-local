@@ -88,6 +88,8 @@ class AgentSettings(BaseModel):
     max_context_images: int = 3
     context_chars_per_doc: int = 1500
     checkpoint_path: Path = Path("data/checkpoints.sqlite")
+    guard: Literal["off", "ollama"] = "off"  # needs the private-rag-guard package
+    guard_model: str = "qwen3.5:9b"  # local Ollama judge for injection checks
 
 
 class EvalSettings(BaseModel):

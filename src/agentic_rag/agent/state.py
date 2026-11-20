@@ -28,6 +28,8 @@ class AgentState(TypedDict, total=False):
     citations: list[Citation]
     grounded: bool | None
     feedback: str | None
+    blocked: bool
+    guard_dropped: int
 
 
 def standalone(state: AgentState) -> str:
@@ -52,6 +54,8 @@ def initial_state(
         "citations": [],
         "grounded": None,
         "feedback": None,
+        "blocked": False,
+        "guard_dropped": 0,
     }
 
 

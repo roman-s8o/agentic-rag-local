@@ -36,6 +36,11 @@ DIRECT_SYSTEM = """You are a helpful assistant for a document question-answering
 Reply briefly. If the user asks for factual information, tell them to ask a question about \
 their documents."""
 
+BLOCKED_ANSWER = (
+    "I cannot process this request because it looks like an attempt to change my rules or "
+    "access data I am not allowed to share. Please ask a question about your documents."
+)
+
 NO_CONTEXT_ANSWER = (
     "I could not find information about this in the indexed documents. "
     "Try rephrasing the question or ingesting additional sources."

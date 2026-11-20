@@ -20,9 +20,12 @@ from agentic_rag.agent.nodes import (
     Rerank,
     Retrieve,
     RewriteQuery,
+    ScreenDocuments,
+    ScreenInput,
     finalize,
     route_after_check,
     route_after_grade,
+    route_after_screen,
 )
 from agentic_rag.agent.state import AgentState
 
@@ -36,6 +39,8 @@ def build_graph(
 ) -> CompiledStateGraph:
     cfg = deps.settings
     graph = StateGraph(AgentState)
+    graph.add_node("screen_input", ScreenInput(deps))
+    graph.add_node("screen_documents", ScreenDocuments(deps))
     graph.add_node("analyze", AnalyzeQuery(deps))
     graph.add_node("direct_answer", DirectAnswer(deps))
     graph.add_node("retrieve", Retrieve(deps))
@@ -46,10 +51,12 @@ def build_graph(
     graph.add_node("check", CheckGroundedness(deps))
     graph.add_node("finalize", finalize)
 
-    graph.add_edge(START, "analyze")
+    graph.add_edge(START, "screen_input")
+    graph.add_conditional_edges("screen_input", route_after_screen, ["analyze", "finalize"])
     graph.add_conditional_edges("analyze", route_after_analyze, ["direct_answer", "retrieve"])
     graph.add_edge("retrieve", "rerank")
-    graph.add_edge("rerank", "grade")
+    graph.add_edge("rerank", "screen_documents")
+    graph.add_edge("screen_documents", "grade")
     graph.add_conditional_edges(
         "grade",
         partial(route_after_grade, max_rounds=cfg.max_retrieval_rounds),

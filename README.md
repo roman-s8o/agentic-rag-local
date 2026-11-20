@@ -19,6 +19,7 @@ Design decisions live in [`docs/adr/`](docs/adr/).
 - **Multimodal** — PDF/DOCX/images in, VLM answers over retrieved figures
 - **Any open-source model** — `rag models pull <org/name>` from Hugging Face
 - **Same app on GPU server and Mac** — vLLM on an NVIDIA GPU by default; Ollama or MLX on a Mac through env vars
+- **Optional input and document screening** — `RAG_AGENT__GUARD=ollama` checks the user's question and every retrieved chunk for prompt injection with a local judge ([private-rag-guard](../private-rag-guard); off by default, nothing leaves the machine). Blocked questions never reach a model; flagged chunks are dropped and only their count is kept
 - **Eval gate** — `make eval` runs a golden set through RAGAS and exits 1 if a metric is below its threshold (a manual GitHub workflow, not part of the CI on every push)
 
 ```mermaid

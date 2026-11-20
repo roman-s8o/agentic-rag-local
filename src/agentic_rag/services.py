@@ -10,6 +10,7 @@ from langgraph.graph.state import CompiledStateGraph
 
 from agentic_rag import observability
 from agentic_rag.agent import AgentDeps, build_graph, initial_state, sqlite_checkpointer
+from agentic_rag.agent.deps import Guard
 from agentic_rag.config import Settings
 from agentic_rag.embeddings import (
     ImageEmbedder,
@@ -80,6 +81,20 @@ class Services:
         )
 
     @cached_property
+    def guard(self) -> Guard | None:
+        cfg = self.settings.agent
+        if cfg.guard == "off":
+            return None
+        try:
+            from rag_guard.engines import OllamaJudge  # pyright: ignore[reportMissingImports]
+            from rag_guard.guard import Guard as RagGuard  # pyright: ignore[reportMissingImports]
+        except ImportError as e:  # pragma: no cover
+            raise RuntimeError(
+                "agent.guard is on but the private-rag-guard package is not installed"
+            ) from e
+        return RagGuard(OllamaJudge(cfg.guard_model))
+
+    @cached_property
     def graph(self) -> CompiledStateGraph:
         deps = AgentDeps(
             llm=self.llm,
@@ -87,6 +102,7 @@ class Services:
             reranker=self.reranker,
             settings=self.settings.agent,
             rerank_top_n=self.settings.reranker.top_n,
+            guard=self.guard,
         )
         return build_graph(deps, sqlite_checkpointer(self.settings.agent.checkpoint_path))
 
